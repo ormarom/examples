@@ -73,23 +73,15 @@ namespace OracleErrorExample
         }
         public async Task<List<ProjectPropertiesDTO>> GetThatWorks()
         {
-            return await Task.Run(() =>
-            {
-                var map = Mapper().Compile();
-                return _context.ProjectProperties.Select(d=> map(d)).ToListAsync();
-            });
-            
+            var map = Mapper().Compile();
+            return await _context.ProjectProperties.Select(d => map(d)).ToListAsync();
         }
 
         public async Task<List<ProjectPropertiesDTO>> GetThatIsBroken()
         {
             //we crash in the select. note that this works in MsSql...
-            return await Task.Run(() =>
-            {
-                //this is the perfered way since it will select in the level of the sql.
-                return _context.ProjectProperties.Select(Mapper()).ToListAsync();
-            });
-
+            //this is the perfered way since it will select in the level of the sql.
+            return await _context.ProjectProperties.Select(Mapper()).ToListAsync();
         }
 
         public Expression<Func<ProjectProperties, ProjectPropertiesDTO>> Mapper()
