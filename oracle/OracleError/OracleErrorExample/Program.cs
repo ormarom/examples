@@ -24,14 +24,19 @@ namespace OracleErrorExample
             using (var scope = webHost.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
+                var context = services.GetService<LabDbContext>();
                 services.GetService<LabDbContext>().Database.Migrate();
-                var commandsDao = new Commands(services.GetService<LabDbContext>());
-                commandsDao.CreatProject(1000);
-                commandsDao.CreatProject(1001);
-                commandsDao.CreatProject(1002);
-                var projects = new Query(services.GetService<LabDbContext>()).Get().Result;
+                if (!context.ProjectProperties.Any())
+                {
+                    var commandsDao = new Commands(context);
+                    commandsDao.CreatProject(2001);
+                    commandsDao.CreatProject(2002);
+                    commandsDao.CreatProject(2003);
+                }
+                
+                //var projects = new Query(services.GetService<LabDbContext>()).Get().Result;
             }
-            return;
+            webHost.Run();
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
@@ -66,10 +71,25 @@ namespace OracleErrorExample
         {
             _context = context;
         }
-        public async Task<List<ProjectPropertiesDTO>> Get()
+        public async Task<List<ProjectPropertiesDTO>> GetThatWorks()
+        {
+            return await Task.Run(() =>
+            {
+                var map = Mapper().Compile();
+                return _context.ProjectProperties.Select(d=> map(d)).ToListAsync();
+            });
+            
+        }
+
+        public async Task<List<ProjectPropertiesDTO>> GetThatIsBroken()
         {
             //we crash in the select. note that this works in MsSql...
-            return await _context.ProjectProperties.Select(Mapper()).ToListAsync();
+            return await Task.Run(() =>
+            {
+                //this is the perfered way since it will select in the level of the sql.
+                return _context.ProjectProperties.Select(Mapper()).ToListAsync();
+            });
+
         }
 
         public Expression<Func<ProjectProperties, ProjectPropertiesDTO>> Mapper()

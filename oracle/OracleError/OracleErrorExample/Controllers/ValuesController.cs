@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using OracleErrorExample.Infra;
 
 namespace OracleErrorExample.Controllers
 {
@@ -10,36 +11,29 @@ namespace OracleErrorExample.Controllers
     [ApiController]
     public class ValuesController : ControllerBase
     {
+        private readonly LabDbContext _labDbContext;
+
+        public ValuesController(LabDbContext labDbContext)
+        {
+            _labDbContext = labDbContext;
+        }
+
         // GET api/values
-        [HttpGet]
-        public ActionResult<IEnumerable<string>> Get()
+        [HttpGet("getgood")]
+        public async Task<IActionResult> GetGood()
         {
-            return new string[] { "value1", "value2" };
+            var result = await new Query(_labDbContext).GetThatWorks();
+            return Ok(result);
         }
 
-        // GET api/values/5
-        [HttpGet("{id}")]
-        public ActionResult<string> Get(int id)
+        // GET api/values
+        [HttpGet("getbad")]
+        public async Task<IActionResult> GetBad()
         {
-            return "value";
+            var result = await new Query(_labDbContext).GetThatIsBroken();
+            return Ok(result);
         }
 
-        // POST api/values
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
 
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/values/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
     }
 }
